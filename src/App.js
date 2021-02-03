@@ -5,6 +5,7 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
+import { axios } from "axios";
 
 import "bootswatch/dist/lux/bootstrap.min.css";
 import "./App.css";
@@ -24,13 +25,32 @@ const CheckoutForm = () => {
       type: "card",
       card: element.getElement(CardElement),
     });
+    if (!error) {
+      console.log(paymentMethod);
+
+      const { id } = paymentMethod;
+
+      const {data} = await axios.post("http://localhost:3001/api/createCharge", {
+        id,
+        amount: 10000,
+      });
+
+      console.log(data);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="card card-body">
-      <img src="https://riodoce.mx/wp-content/uploads/2019/11/donitas1-768x768.jpg" alt="bimbo" className="img-fluid"></img>
-      <CardElement />
-      <button>Buy</button>
+      <img
+        src="https://riodoce.mx/wp-content/uploads/2019/11/donitas1-768x768.jpg"
+        alt="bimbo"
+        className="img-fluid"
+      ></img>
+
+      <div className="form-group">
+        <CardElement className="form-control" />
+      </div>
+      <button className="btn btn-success">Buy</button>
     </form>
   );
 };
@@ -41,7 +61,7 @@ function App() {
       <div className="container p-4">
         <div className="row">
           <div className="col-md-4 offset-md-4">
-          <CheckoutForm />
+            <CheckoutForm />
           </div>
         </div>
       </div>
