@@ -5,10 +5,11 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
-import { axios } from "axios";
+import axios from "axios";
 
 import "bootswatch/dist/lux/bootstrap.min.css";
 import "./App.css";
+import { useState } from "react";
 
 const stripePromise = loadStripe(
   "pk_test_51IGoRvBzMJ7KcpX6knJmPiuZdDanULBsmS9ILs3F68pWeaweb9uPxCBn7jvM9Llu54BYKikZWoEPwkRSetiK1wex001CbwZekN"
@@ -17,6 +18,7 @@ const stripePromise = loadStripe(
 const CheckoutForm = () => {
   const stripe = useStripe();
   const element = useElements();
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,18 +27,28 @@ const CheckoutForm = () => {
       type: "card",
       card: element.getElement(CardElement),
     });
+
+    setLoading(true);
     if (!error) {
       console.log(paymentMethod);
 
-      const { id } = paymentMethod;
+      try {
+        const { id } = paymentMethod;
+        const { data } = await axios.post(
+          "http://localhost:3001/api/createCharge",
+          {
+            id,
+            amount: 10000,
+          }
+        );
 
-      const {data} = await axios.post("http://localhost:3001/api/createCharge", {
-        id,
-        amount: 10000,
-      });
-
-      console.log(data);
+        console.log(data);
+        element.getElement(CardElement).clear();
+      } catch (error) {
+        console.log(error);
+      }
     }
+    setLoading(false);
   };
 
   return (
@@ -50,7 +62,15 @@ const CheckoutForm = () => {
       <div className="form-group">
         <CardElement className="form-control" />
       </div>
-      <button className="btn btn-success">Buy</button>
+      <button className="btn btn-success" disabled={!stripe}>
+        {loading ? (
+          <div className="spinner-border text-primary" role="status">
+            <span className="sr-only">Loading...</span>
+          </div>
+        ) : (
+          "Buy"
+        )}
+      </button>
     </form>
   );
 };
